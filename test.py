@@ -11,4 +11,4 @@ while True:
         break
 
 cap.release()
-cv2.destroyAllWindows HELLO
+cv2.destroyAllWindows BALLS
