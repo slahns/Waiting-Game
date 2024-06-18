@@ -2,8 +2,8 @@ import numpy as py
 import cv2
 
 cap = cv2.VideoCapture(0)
-face_cascade = cv2.CascadeClassifier(cv2.data.haardcascades + "haardcascade_frontalface_default.xml")
-eye_cascade = cv2.CascadeClassifier(cv2.data.haardcascades + "haardcascade_eye.xml")
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
 
 
 while True:
@@ -20,8 +20,11 @@ while True:
             cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (225, 0, 0), 5)
 
 
-    cv2.imshow('frame', frame)
-    
+    if (cv2.imshow('frame', frame)):
+        print("watching")
+    else:
+        print("looking away")
+
     if cv2.waitKey(1) == ord('q'):
         break
 
