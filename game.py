@@ -1,4 +1,5 @@
-from facial_recognition import check_webcam, facial_recognition, watching
+import threading
+from facial_recognition import check_webcam, facial_recognition, watching_event
 import pygame
 
 TITLE = "The Waiting Game"
@@ -10,10 +11,11 @@ win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
+pygame.mouse.set_visible(False)
 
 if check_webcam():
     print("Webcam confirmed to exist")
-    facial_recognition()
+    threading.Thread(target=facial_recognition, daemon=True).start()
 else:
     print("Error: Could not open webcam")
 
@@ -25,7 +27,7 @@ class Zimblort:
         self.color = (250, 120, 60)
         self.velX = 0
         self.velY = 0
-        self.speed = 4
+        self.speed = 0.3
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, self.rect)
@@ -33,7 +35,7 @@ class Zimblort:
     def update(self):
         self.velX = 0
         self.velY = 0
-        if watching:
+        if watching_event.is_set():
             self.velX = self.speed
 
         self.x += self.velX

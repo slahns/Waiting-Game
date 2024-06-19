@@ -1,8 +1,9 @@
 import numpy as np
 import cv2
 import time
+import threading
 
-watching = False
+watching_event = threading.Event()
 
 # checks if webcam exists
 def check_webcam():
@@ -61,21 +62,21 @@ def facial_recognition():
             print("Face detected")
             if eyes_detected:
                 print("Eyes detected")
-                watching = True
+                watching_event.set()
             else:
                 print("Eyes not detected")
                 if eyes_not_detected_start_time:
                     elapsed_time_eyes = time.time() - eyes_not_detected_start_time
                     if elapsed_time_eyes >= eyes_not_detected_duration:
                         print(f"Eyes have not been detected for {eyes_not_detected_duration} seconds")
-                        watching = False
+                        watching_event.clear()
         else:
             print("No face detected")
             if face_not_detected_start_time:
                 elapsed_time_face = time.time() - face_not_detected_start_time
                 if elapsed_time_face >= face_not_detected_duration:
                     print(f"Face has not been detected for {face_not_detected_duration} seconds")
-                    watching = False
+                    watching_event.clear()
 
         cv2.imshow('frame', frame)
 
