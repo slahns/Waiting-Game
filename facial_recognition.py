@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import time
 
+watching = False
+
 # checks if webcam exists
 def check_webcam():
     cap = cv2.VideoCapture(0)
@@ -59,18 +61,21 @@ def facial_recognition():
             print("Face detected")
             if eyes_detected:
                 print("Eyes detected")
+                watching = True
             else:
                 print("Eyes not detected")
                 if eyes_not_detected_start_time:
                     elapsed_time_eyes = time.time() - eyes_not_detected_start_time
                     if elapsed_time_eyes >= eyes_not_detected_duration:
                         print(f"Eyes have not been detected for {eyes_not_detected_duration} seconds")
+                        watching = False
         else:
             print("No face detected")
             if face_not_detected_start_time:
                 elapsed_time_face = time.time() - face_not_detected_start_time
                 if elapsed_time_face >= face_not_detected_duration:
                     print(f"Face has not been detected for {face_not_detected_duration} seconds")
+                    watching = False
 
         cv2.imshow('frame', frame)
 
