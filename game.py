@@ -17,12 +17,12 @@ win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 sprites = pygame.sprite.Group()
-sprite_sheet_image = pygame.image.load('Waiting-Game/assets/doux.png').convert_alpha()
+sprite_sheet_image = pygame.image.load('assets/doux.png').convert_alpha()
 sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
 
 animation_list = []
 animation_steps = [4, 6, 3, 4]
-action = 1
+action = 0 
 last_update = pygame.time.get_ticks()
 animation_cooldown = 50 #ms
 frame = 0
@@ -48,13 +48,22 @@ zimblort = Zimblort(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 
 run = True
 while run:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
 
-    # bg
-    win.fill((12, 24, 36))  
+    if watching_event.is_set():
+        new_action = 1
+    else:
+        new_action = 0
 
-    zimblort.draw(win)
-    zimblort.update()
 
+    # reset frame if the action has changed
+    if new_action != action:
+        action = new_action
+        frame = 0
+
+    # update animation frame
     current_time = pygame.time.get_ticks()
     if current_time - last_update >= animation_cooldown:
         frame += 1
@@ -62,16 +71,14 @@ while run:
         if frame >= len(animation_list[action]):
             frame = 0
 
-    screen.blit(animation_list[action][frame], (0, 0))
+    # draw background
+    win.fill((12, 24, 36))
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
+    zimblort.draw(win)
+    zimblort.update()
 
-        if watching_event:
-            action = 0
-        else:
-            action = 1
+    # draw current frame of animation
+    screen.blit(animation_list[action][frame], (zimblort.x, zimblort.y))
 
     pygame.display.flip()
     clock.tick(120)
