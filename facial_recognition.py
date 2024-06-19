@@ -11,8 +11,12 @@ eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml
 
 face_detected = False
 eyes_detected = False
+
 eyes_not_detected_start_time = None
 eyes_not_detected_duration = 2
+
+face_not_detected_start_time = None
+face_not_detected_duration = 2
 
 while (cap.isOpened()):
     webcam_exists = True
@@ -24,18 +28,20 @@ while (cap.isOpened()):
 
         if len(faces) > 0:
             face_detected = True
+            face_not_detected_start_time = None  # reset the timer if face is detected
         else:
+            if face_not_detected_start_time is None:
+                face_not_detected_start_time = time.time()  # start the timer
             face_detected = False
-
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x,y), (x + w, y + h), (225, 0, 0), 5)
             roi_gray = gray[y:y+w, x:x+w]
             roi_color = frame[y:y+h, x:x+w] # reference to og frame so we can find eyes on the face on roi_gray
             eyes = eye_cascade.detectMultiScale(roi_gray, 1.3, 5)
 
-            if len(eyes) >= 2:
+            if len(eyes) > 0:
                 eyes_detected = True
-                eyes_not_detected_start_time = None  # reset the timer if both eyes are detected
+                eyes_not_detected_start_time = None  # reset the timer if eyes are detected
             else:
                 if eyes_not_detected_start_time is None:
                     eyes_not_detected_start_time = time.time()  # start the timer
@@ -48,15 +54,19 @@ while (cap.isOpened()):
         if face_detected:
             print("Face detected")
             if eyes_detected:
-                print("Both eyes detected")
+                print("Eyes detected")
             else:
-                print("Eyes not detected or only one eye detected")
+                print("Eyes not detected")
                 if eyes_not_detected_start_time:
-                    elapsed_time = time.time() - eyes_not_detected_start_time
-                    if elapsed_time >= eyes_not_detected_duration:
+                    elapsed_time_eyes = time.time() - eyes_not_detected_start_time
+                    if elapsed_time_eyes >= eyes_not_detected_duration:
                         print(f"Eyes have not been detected for {eyes_not_detected_duration} seconds")
         else:
             print("No face detected")
+            if face_not_detected_start_time:
+                elapsed_time_face = time.time() - face_not_detected_start_time
+                if elapsed_time_face >= face_not_detected_duration:
+                    print(f"Face has not been detected for {face_not_detected_duration} seconds")
 
         cv2.imshow('frame', frame)
 
