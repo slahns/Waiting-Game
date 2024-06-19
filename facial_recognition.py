@@ -14,8 +14,7 @@ def check_webcam():
     return True
 
 # runs the facial recognition 
-def facial_recognition():
-    cap = cv2.VideoCapture(0)
+def facial_recognition(cap, frame_holder):
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
 
@@ -78,10 +77,13 @@ def facial_recognition():
                     print(f"Face has not been detected for {face_not_detected_duration} seconds")
                     watching_event.clear()
 
-        cv2.imshow('frame', frame)
+        #cv2.imshow('frame', frame)
+
+        with frame_holder["lock"]:
+            frame_holder["frame"] = frame.copy()
 
         if cv2.waitKey(1) == ord('q'):
             break
 
     cap.release()
-    cv2.destroyAllWindows()
+    
