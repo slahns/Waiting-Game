@@ -1,5 +1,6 @@
 from facial_recognition import check_webcam, facial_recognition, watching_event
 from zimblort import Zimblort
+from rope import Rope
 import threading
 import pygame
 import spritesheet
@@ -7,10 +8,12 @@ import cv2
 import numpy as np
 import os
 
+
 TITLE = "The Waiting Game"
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 BLACK = (0, 0, 0)
+ROPE_COLOR = (139, 69, 19)  # brown rope
 
 pygame.init()
 pygame.display.set_caption(TITLE)
@@ -25,16 +28,26 @@ sprite_sheet_image = pygame.image.load(sprite_sheet_path).convert_alpha()
 sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
 animation_steps = [4, 6, 3, 4]
 
-# Load the "no webcam" image
 no_webcam_img = pygame.image.load(os.path.join(script_dir, 'assets', 'no_webcam.png'))
 
-# Function to display a message or image
+ground_tile_1 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+ground_rect_1 = ground_tile_1.get_rect()
+ground_rect_1.bottomleft = (0, 600)
+
+ground_tile_2 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+ground_rect_2 = ground_tile_2.get_rect()
+ground_rect_2.bottomright = (800, 600)
+
+ground_tile_3 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+ground_rect_3 = ground_tile_2.get_rect()
+ground_rect_3.bottomright = (1300, 600)
+
+
 def display_no_webcam_message():
     win.fill(BLACK)
     win.blit(no_webcam_img, (0, 0))
     pygame.display.flip()
 
-# Loop to check for webcam connection
 webcam_connected = False
 while not webcam_connected:
     if check_webcam():
@@ -45,15 +58,15 @@ while not webcam_connected:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-        pygame.time.wait(1000)  # Wait for 1 second before checking again
+        pygame.time.wait(1000)  # wait for 1 second before checking again
 
 print("Webcam confirmed to exist")
 cap = cv2.VideoCapture(0)
 frame_holder = {"frame": None, "lock": threading.Lock()}
 threading.Thread(target=facial_recognition, args=(cap, frame_holder), daemon=True).start()
 
-# zimblort initialization
-zimblort = Zimblort(100, 100, sprite_sheet, animation_steps)
+zimblort = Zimblort(0, 387, sprite_sheet, animation_steps)
+
 
 def convert_cv2_to_pygame(frame):
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -64,26 +77,43 @@ def convert_cv2_to_pygame(frame):
 def resize_frame(frame, width, height):
     return cv2.resize(frame, (width, height))
 
+def draw(win, offset):
+
+    win.blit(ground_tile_1, (ground_rect_1.left - offset[0], ground_rect_1.top - offset[1]))
+    win.blit(ground_tile_2, (ground_rect_2.left - offset[0], ground_rect_2.top - offset[1]))
+    win.blit(ground_tile_2, (ground_rect_3.left - offset[0], ground_rect_3.top - offset[1]))
+
+    pygame.draw.line(win, ROPE_COLOR, (ground_rect_1.right - offset[0], ground_rect_1.top - offset[1]), (ground_rect_2.left - offset[0], ground_rect_2.top - offset[1]), 5)
+    pygame.draw.line(win, ROPE_COLOR, (ground_rect_2.right - offset[0], ground_rect_2.top - offset[1]), (ground_rect_3.left - offset[0], ground_rect_3.top - offset[1]), 5)
+
+    zimblort.draw(win, offset)
+
 run = True
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-
-    # update and draw zimblort
-    win.fill((12, 24, 36))  # Draw background
+    
     zimblort.update()
-    zimblort.draw(win)
+
+    offset_x = zimblort.x - SCREEN_WIDTH // 2
+    offset_y = zimblort.y - SCREEN_HEIGHT // 2
+
+    offset_x = max(0, min(offset_x, 1600 - SCREEN_WIDTH))
+    offset_y = max(0, min(offset_y, 100 - SCREEN_HEIGHT))
+
+    win.fill((12, 24, 36))
+
+    draw(win, (offset_x, offset_y))
 
     with frame_holder["lock"]:
         frame = frame_holder["frame"]
     if frame is not None:
         resized_frame = resize_frame(frame, 320, 240)
         frame_surface = convert_cv2_to_pygame(resized_frame)
-        win.blit(frame_surface, (0, 0))
+        win.blit(frame_surface, (100, 0))
 
     pygame.display.flip()
     clock.tick(120)
-
 
 pygame.quit()

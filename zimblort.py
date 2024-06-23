@@ -4,8 +4,6 @@ import pygame
 class Zimblort:
 
     def __init__(self, x, y, sprite_sheet, animation_steps, animation_cooldown=50):
-
-        #zimblort object 
         self.x = int(x)
         self.y = int(y)
         self.rect = pygame.Rect((self.x, self.y, 32, 32))
@@ -14,16 +12,16 @@ class Zimblort:
         self.velY = 0
         self.speed = 0.3
 
-        #sprite and animation
+       
         self.sprite_sheet = sprite_sheet
         self.animation_steps = animation_steps
         self.animation_list = self.load_images(sprite_sheet, animation_steps)
         self.animation_cooldown = animation_cooldown
-        self.action = 0  # idle action
+        self.action = 0  
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
 
-    def draw(self, win):
+    def draw(self, win, offset):
         current_time = pygame.time.get_ticks()
         if current_time - self.last_update >= self.animation_cooldown:
             self.frame += 1
@@ -32,15 +30,15 @@ class Zimblort:
                 self.frame = 0
 
         image = self.animation_list[self.action][self.frame]
-        win.blit(image, (self.x, self.y))
+        win.blit(image, (self.x - offset[0], self.y - offset[1]))
 
     def update(self):
         self.velX = 0
         self.velY = 0
         if watching_event.is_set():
-            new_action = 1 
+            new_action = 1
         else:
-            new_action = 0  
+            new_action = 0
 
         if new_action != self.action:
             self.action = new_action
