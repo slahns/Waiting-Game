@@ -78,7 +78,7 @@ def facial_recognition(cap, frame_holder):
                         watching_event.clear()
                         global_vars.falling = True
                         if elapsed_time_eyes >= 5:
-                            #print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_eyes} seconds")
+                            print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_eyes} seconds")
                             watching_event.clear()
                             global_vars.fell = True
                 else:
@@ -93,7 +93,7 @@ def facial_recognition(cap, frame_holder):
                     watching_event.clear()
                     global_vars.falling = True
                     if elapsed_time_face >= 5:
-                        #print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_face} seconds")
+                        print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_face} seconds")
                         watching_event.clear()
                         global_vars.fell = True
             else:
