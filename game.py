@@ -1,6 +1,5 @@
-from facial_recognition import check_webcam, facial_recognition, watching_event
+from facial_recognition import check_webcam, facial_recognition
 from zimblort import Zimblort
-from rope import Rope
 import threading
 import pygame
 import spritesheet
@@ -26,7 +25,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sprite_sheet_path = os.path.join(script_dir, 'assets', 'doux.png')
 sprite_sheet_image = pygame.image.load(sprite_sheet_path).convert_alpha()
 sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
-animation_steps = [4, 6, 3, 4]
+animation_steps = [4, 6, 3, 4, 6]
 
 no_webcam_img = pygame.image.load(os.path.join(script_dir, 'assets', 'no_webcam.png'))
 
@@ -41,6 +40,8 @@ ground_rect_2.bottomright = (800, 600)
 ground_tile_3 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
 ground_rect_3 = ground_tile_2.get_rect()
 ground_rect_3.bottomright = (1300, 600)
+
+ground_tiles = [ground_rect_1, ground_rect_2, ground_rect_3]
 
 
 def display_no_webcam_message():
@@ -58,15 +59,14 @@ while not webcam_connected:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-        pygame.time.wait(1000)  # wait for 1 second before checking again
+        pygame.time.wait(1000)  
 
 print("Webcam confirmed to exist")
 cap = cv2.VideoCapture(0)
 frame_holder = {"frame": None, "lock": threading.Lock()}
 threading.Thread(target=facial_recognition, args=(cap, frame_holder), daemon=True).start()
 
-zimblort = Zimblort(0, 387, sprite_sheet, animation_steps)
-
+zimblort = Zimblort(0, 387, sprite_sheet, animation_steps, ground_tiles)
 
 def convert_cv2_to_pygame(frame):
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -109,9 +109,9 @@ while run:
     with frame_holder["lock"]:
         frame = frame_holder["frame"]
     if frame is not None:
-        resized_frame = resize_frame(frame, 320, 240)
+        resized_frame = resize_frame(frame, 200, 200)
         frame_surface = convert_cv2_to_pygame(resized_frame)
-        win.blit(frame_surface, (100, 0))
+        win.blit(frame_surface, (25, 25))
 
     pygame.display.flip()
     clock.tick(120)
