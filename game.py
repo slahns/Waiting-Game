@@ -43,6 +43,26 @@ ground_rect_3.bottomright = (1300, 600)
 
 ground_tiles = [ground_rect_1, ground_rect_2, ground_rect_3]
 
+bg_images = []
+for i in range(1,6):
+    bg_image = pygame.image.load(os.path.join(script_dir, 'assets', "Parallax", f"plx-{i}.png")).convert_alpha()
+    bg_image = pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))  
+    bg_images.append(bg_image)
+
+
+bg_speeds = [0.1, 0.11, 0.11, 0.12, 0.13]
+bg_positions = [0, 0, 0, 0, 0]
+
+def draw_bg(is_moving):
+    for idx, bg_image in enumerate(bg_images):
+        if is_moving:
+            bg_positions[idx] -= bg_speeds[idx]
+            if bg_positions[idx] <= -SCREEN_WIDTH:
+                bg_positions[idx] = 0
+        win.blit(bg_image, (bg_positions[idx], 0))
+        win.blit(bg_image, (bg_positions[idx] + SCREEN_WIDTH, 0))
+
+
 
 def display_no_webcam_message():
     win.fill(BLACK)
@@ -104,6 +124,8 @@ while run:
 
     win.fill((12, 24, 36))
 
+    is_moving = zimblort.action == 1 
+    draw_bg(is_moving) 
     draw(win, (offset_x, offset_y))
 
     with frame_holder["lock"]:
@@ -111,7 +133,9 @@ while run:
     if frame is not None:
         resized_frame = resize_frame(frame, 200, 200)
         frame_surface = convert_cv2_to_pygame(resized_frame)
-        win.blit(frame_surface, (25, 25))
+        frame_rect = frame_surface.get_rect(topleft=(25, 25))  
+        win.blit(frame_surface, frame_rect)
+        pygame.draw.rect(win, (27, 65, 153), frame_rect, 5)
 
     pygame.display.flip()
     clock.tick(120)
