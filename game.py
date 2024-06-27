@@ -29,6 +29,8 @@ animation_steps = [4, 6, 3, 4, 6]
 
 no_webcam_img = pygame.image.load(os.path.join(script_dir, 'assets', 'no_webcam.png'))
 
+finish_flag = pygame.image.load(os.path.join(script_dir, 'assets', 'finish_flag.png'))
+
 ground_tile_1 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
 ground_rect_1 = ground_tile_1.get_rect()
 ground_rect_1.bottomleft = (0, 600)
@@ -39,7 +41,7 @@ ground_rect_2.bottomright = (800, 600)
 
 ground_tile_3 =  pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
 ground_rect_3 = ground_tile_2.get_rect()
-ground_rect_3.bottomright = (1300, 600)
+ground_rect_3.bottomright = (3000, 600)
 
 ground_tiles = [ground_rect_1, ground_rect_2, ground_rect_3]
 
@@ -53,16 +55,14 @@ for i in range(1,6):
 bg_speeds = [0.1, 0.11, 0.11, 0.12, 0.13]
 bg_positions = [0, 0, 0, 0, 0]
 
-def draw_bg(is_moving):
+def draw_bg(is_moving, offset_x):
     for idx, bg_image in enumerate(bg_images):
         if is_moving:
             bg_positions[idx] -= bg_speeds[idx]
             if bg_positions[idx] <= -SCREEN_WIDTH:
-                bg_positions[idx] = 0
-        win.blit(bg_image, (bg_positions[idx], 0))
-        win.blit(bg_image, (bg_positions[idx] + SCREEN_WIDTH, 0))
-
-
+                bg_positions[idx] += SCREEN_WIDTH
+        win.blit(bg_image, (bg_positions[idx] - offset_x * bg_speeds[idx], 0))
+        win.blit(bg_image, (bg_positions[idx] + SCREEN_WIDTH - offset_x * bg_speeds[idx], 0))
 
 def display_no_webcam_message():
     win.fill(BLACK)
@@ -97,16 +97,39 @@ def convert_cv2_to_pygame(frame):
 def resize_frame(frame, width, height):
     return cv2.resize(frame, (width, height))
 
-def draw(win, offset):
+def draw(win, offset_x, offset_y):
+    for ground_tile in ground_tiles:
+        win.blit(ground_tile_1, (ground_tile.left - offset_x, ground_tile.top - offset_y))
 
-    win.blit(ground_tile_1, (ground_rect_1.left - offset[0], ground_rect_1.top - offset[1]))
-    win.blit(ground_tile_2, (ground_rect_2.left - offset[0], ground_rect_2.top - offset[1]))
-    win.blit(ground_tile_2, (ground_rect_3.left - offset[0], ground_rect_3.top - offset[1]))
+    win.blit(finish_flag, (ground_tiles[1].right - offset_x, ground_tiles[1].top - offset_y))
+    pygame.draw.line(win, ROPE_COLOR, (ground_tiles[0].right - offset_x, ground_tiles[0].top - offset_y), (ground_tiles[1].left - offset_x, ground_tiles[1].top - offset_y), 5)
+    pygame.draw.line(win, ROPE_COLOR, (ground_tiles[1].right - offset_x, ground_tiles[1].top - offset_y), (ground_tiles[2].left - offset_x, ground_tiles[2].top - offset_y), 5)
 
-    pygame.draw.line(win, ROPE_COLOR, (ground_rect_1.right - offset[0], ground_rect_1.top - offset[1]), (ground_rect_2.left - offset[0], ground_rect_2.top - offset[1]), 5)
-    pygame.draw.line(win, ROPE_COLOR, (ground_rect_2.right - offset[0], ground_rect_2.top - offset[1]), (ground_rect_3.left - offset[0], ground_rect_3.top - offset[1]), 5)
+    zimblort.draw(win, (offset_x, offset_y))
 
-    zimblort.draw(win, offset)
+def show_start_screen():
+    start_screen = True
+    font = pygame.font.SysFont(None, 48)
+    text = font.render("Press any button to begin", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+
+    while start_screen:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                start_screen = False
+
+        win.fill((12, 24, 36))
+        draw_bg(False, 0) 
+        draw(win, 0, 0)  
+
+        win.blit(text, text_rect)
+        pygame.display.flip()
+        clock.tick(60)
+
+show_start_screen()
 
 run = True
 while run:
@@ -117,16 +140,16 @@ while run:
     zimblort.update()
 
     offset_x = zimblort.x - SCREEN_WIDTH // 2
+    offset_x = max(0, min(offset_x, ground_tiles[-1].right - SCREEN_WIDTH))
+    
     offset_y = zimblort.y - SCREEN_HEIGHT // 2
-
-    offset_x = max(0, min(offset_x, 1600 - SCREEN_WIDTH))
-    offset_y = max(0, min(offset_y, 100 - SCREEN_HEIGHT))
+    offset_y = max(0, min(offset_y, ground_tiles[0].top - SCREEN_HEIGHT))
 
     win.fill((12, 24, 36))
 
     is_moving = zimblort.action == 1 
-    draw_bg(is_moving) 
-    draw(win, (offset_x, offset_y))
+    draw_bg(is_moving, offset_x)
+    draw(win, offset_x, offset_y)
 
     with frame_holder["lock"]:
         frame = frame_holder["frame"]

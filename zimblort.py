@@ -57,10 +57,6 @@ class Zimblort:
         self.velX = 0
 
         if self.check_ground_collision():
-            #global_vars.falling = False
-            #global_vars.fell = False
-            #self.velY = 0
-            #self.angle = 0
             print("on ground")
 
         if facial_recognition.watching_event.is_set():
