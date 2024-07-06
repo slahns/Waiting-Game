@@ -26,6 +26,7 @@ sprite_sheet_path = os.path.join(script_dir, 'assets', 'doux.png')
 sprite_sheet_image = pygame.image.load(sprite_sheet_path).convert_alpha()
 sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
 animation_steps = [4, 6, 3, 4, 6]
+vcrmono = os.path.join(script_dir, 'assets', 'VCR_OSD_MONO_1.001.ttf')
 
 no_webcam_img = pygame.image.load(os.path.join(script_dir, 'assets', 'no_webcam.png'))
 
@@ -56,13 +57,13 @@ bg_speeds = [0.1, 0.11, 0.11, 0.12, 0.13]
 bg_positions = [0, 0, 0, 0, 0]
 
 def draw_bg(is_moving, offset_x):
-    for idx, bg_image in enumerate(bg_images):
+    for index, bg_image in enumerate(bg_images):
         if is_moving:
-            bg_positions[idx] -= bg_speeds[idx]
-            if bg_positions[idx] <= -SCREEN_WIDTH:
-                bg_positions[idx] += SCREEN_WIDTH
-        win.blit(bg_image, (bg_positions[idx] - offset_x * bg_speeds[idx], 0))
-        win.blit(bg_image, (bg_positions[idx] + SCREEN_WIDTH - offset_x * bg_speeds[idx], 0))
+            bg_positions[index] -= bg_speeds[index]
+            if bg_positions[index] <= -SCREEN_WIDTH:
+                bg_positions[index] += SCREEN_WIDTH
+        win.blit(bg_image, (bg_positions[index] - offset_x * bg_speeds[index], 0))
+        win.blit(bg_image, (bg_positions[index] + SCREEN_WIDTH - offset_x * bg_speeds[index], 0))
 
 def display_no_webcam_message():
     win.fill(BLACK)
@@ -109,7 +110,7 @@ def draw(win, offset_x, offset_y):
 
 def show_start_screen():
     start_screen = True
-    font = pygame.font.SysFont(None, 48)
+    font = pygame.font.Font(vcrmono, 48)
     text = font.render("Press any button to begin", True, (255, 255, 255))
     text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
