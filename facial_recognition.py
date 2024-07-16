@@ -3,8 +3,10 @@ import cv2
 import time
 import threading
 import global_vars
+import pygame
 
 watching_event = threading.Event()
+stop_event = threading.Event()
 
 def check_webcam():
     cap = cv2.VideoCapture(0)
@@ -14,7 +16,6 @@ def check_webcam():
     return True
 
 def facial_recognition(cap, frame_holder):
-
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
 
@@ -30,7 +31,7 @@ def facial_recognition(cap, frame_holder):
     face_not_detected_start_time = None
     face_not_detected_duration = 2
 
-    while True:
+    while not stop_event.is_set():
         ret, frame = cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -45,11 +46,11 @@ def facial_recognition(cap, frame_holder):
 
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (225, 0, 0), 5)
-            roi_gray = gray[y:y+h, x:x+w]
-            roi_color = frame[y:y+h, x:x+w] 
+            roi_gray = gray[y:y + h, x:x + w]
+            roi_color = frame[y:y + h, x:x + w]
             eyes = eye_cascade.detectMultiScale(roi_gray, 1.3, 5)
 
-            if len(eyes) > 0: # not everyone has two eyes, so checking if any eyes are present
+            if len(eyes) > 0:  # not everyone has two eyes, so checking if any eyes are present
                 eyes_detected = True
                 eyes_not_detected_start_time = None  # reset the timer if eyes are detected
             else:
@@ -60,11 +61,11 @@ def facial_recognition(cap, frame_holder):
             for (ex, ey, ew, eh) in eyes:
                 cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (225, 0, 0), 5)
 
-        if face_detected:
+        if face_detected and global_vars.game_over == False:
             print("Face detected")
             global_vars.falling = False
-            
-            if eyes_detected:
+
+            if eyes_detected and global_vars.game_over == False:
                 print("Eyes detected")
                 global_vars.falling = False
                 watching_event.set()
@@ -81,6 +82,9 @@ def facial_recognition(cap, frame_holder):
                             print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_eyes} seconds")
                             watching_event.clear()
                             global_vars.fell = True
+                            global_vars.game_over_time = pygame.time.get_ticks()  # Record the time when game over occurs
+                            global_vars.game_over = True
+                            break
                 else:
                     global_vars.falling = False
         else:
@@ -96,10 +100,11 @@ def facial_recognition(cap, frame_holder):
                         print(f"Zimblort fell: Eyes have not been detected for {elapsed_time_face} seconds")
                         watching_event.clear()
                         global_vars.fell = True
+                        global_vars.game_over_time = pygame.time.get_ticks()  # Record the time when game over occurs
+                        global_vars.game_over = True
+                        break
             else:
                 global_vars.falling = False
-
-        #cv2.imshow('frame', frame)
 
         with frame_holder["lock"]:
             frame_holder["frame"] = frame.copy()
@@ -108,4 +113,4 @@ def facial_recognition(cap, frame_holder):
             break
 
     cap.release()
-    
+    print("Facial recognition stopped.")
