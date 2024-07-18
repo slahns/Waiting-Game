@@ -1,3 +1,4 @@
+import sys
 from facial_recognition import check_webcam, facial_recognition, stop_event
 from zimblort import Zimblort
 import global_vars
@@ -8,12 +9,15 @@ import cv2
 import numpy as np
 import os
 import random
+import time
+import ctypes
 
 TITLE = "The Waiting Game"
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 BLACK = (0, 0, 0)
-ROPE_COLOR = (139, 69, 19)  # brown rope
+ROPE_COLOR = (231, 162, 124)  # brown rope
+
 
 pygame.init()
 pygame.display.set_caption(TITLE)
@@ -22,34 +26,48 @@ pygame.mouse.set_visible(False)
 win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sprite_sheet_path = os.path.join(script_dir, 'assets', 'doux.png')
+
+if getattr(sys, 'frozen', False):
+    # PyInstaller bundled
+    base_path = sys._MEIPASS
+else:
+    # Normal execution
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
+sprite_sheet_path = os.path.join(base_path, 'assets', 'doux.png')
 sprite_sheet_image = pygame.image.load(sprite_sheet_path).convert_alpha()
 sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
 animation_steps = [4, 6, 3, 4, 6]
-vcrmono = os.path.join(script_dir, 'assets', 'VCR_OSD_MONO_1.001.ttf')
 
-no_webcam_img = pygame.image.load(os.path.join(script_dir, 'assets', 'no_webcam.png'))
+vcrmono = os.path.join(base_path, 'assets', 'VCR_OSD_MONO_1.001.ttf')
+victory_theme = os.path.join(base_path, 'assets', 'TipTopTomCat Your Heart Your Soul V2.mp3')
+victory_sfx = pygame.mixer.Sound(victory_theme)
 
-finish_flag = pygame.image.load(os.path.join(script_dir, 'assets', 'finish_flag.png'))
+no_webcam_img = pygame.image.load(os.path.join(base_path, 'assets', 'no_webcam.png'))
+victory_img = pygame.image.load(os.path.join(base_path, 'assets', 'you_won.png'))
+icon_img = pygame.image.load(os.path.join(base_path, 'assets', 'zimblort_icon.png'))
 
-ground_tile_1 = pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+pygame.display.set_icon(icon_img) 
+
+#finish_flag = pygame.image.load(os.path.join(script_dir, 'assets', 'finish_flag.png'))
+
+ground_tile_1 = pygame.image.load(os.path.join(base_path, 'assets', 'ground_tile.png'))
 ground_rect_1 = ground_tile_1.get_rect()
 ground_rect_1.bottomleft = (0, 600)
 
-ground_tile_2 = pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+ground_tile_2 = pygame.image.load(os.path.join(base_path, 'assets', 'ground_tile.png'))
 ground_rect_2 = ground_tile_2.get_rect()
 ground_rect_2.bottomright = (800, 600)
 
-ground_tile_3 = pygame.image.load(os.path.join(script_dir, 'assets', 'ground_tile.png'))
+ground_tile_3 = pygame.image.load(os.path.join(base_path, 'assets', 'ground_tile.png'))
 ground_rect_3 = ground_tile_2.get_rect()
-ground_rect_3.bottomright = (10000, 600)
+ground_rect_3.bottomright = (1200, 600)
 
 ground_tiles = [ground_rect_1, ground_rect_2, ground_rect_3]
 
 bg_images = []
 for i in range(1, 6):
-    bg_image = pygame.image.load(os.path.join(script_dir, 'assets', "Parallax", f"plx-{i}.png")).convert_alpha()
+    bg_image = pygame.image.load(os.path.join(base_path, 'assets', "Parallax", f"plx-{i}.png")).convert_alpha()
     bg_image = pygame.transform.scale(bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
     bg_images.append(bg_image)
 
@@ -74,6 +92,10 @@ def display_no_webcam_message():
     win.blit(no_webcam_img, (0, 0))
     pygame.display.flip()
 
+def display_victory_message():
+    win.fill(BLACK)
+    win.blit(victory_img, (0, 0))
+    pygame.display.flip()
 
 webcam_connected = False
 while not webcam_connected:
@@ -84,7 +106,6 @@ while not webcam_connected:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
         pygame.time.wait(1000)
 
 print("Webcam confirmed to exist")
@@ -112,7 +133,7 @@ def draw(win, offset_x, offset_y):
     for ground_tile in ground_tiles:
         win.blit(ground_tile_1, (ground_tile.left - offset_x, ground_tile.top - offset_y))
 
-    win.blit(finish_flag, (ground_tiles[1].right - offset_x, ground_tiles[1].top - offset_y))
+    #win.blit(finish_flag, (ground_tiles[2].top - offset_x, ground_tiles[2].top - offset_y))
     pygame.draw.line(win, ROPE_COLOR, (ground_tiles[0].right - offset_x, ground_tiles[0].top - offset_y),
                      (ground_tiles[1].left - offset_x, ground_tiles[1].top - offset_y), 5)
     pygame.draw.line(win, ROPE_COLOR, (ground_tiles[1].right - offset_x, ground_tiles[1].top - offset_y),
@@ -122,7 +143,7 @@ def draw(win, offset_x, offset_y):
 
 
 def reset_game():
-    global facial_recognition_thread  # Declare the thread as global
+    global facial_recognition_thread, cap  # Declare the thread as global
     global_vars.falling = False
     global_vars.fell = False
     global_vars.on_ground = True
@@ -140,22 +161,25 @@ def reset_game():
     facial_recognition_thread.join()  # Wait for the thread to finish
     stop_event.clear()  # Clear the stop event for the new thread
 
-    # Start a new facial recognition thread
+    cap.release()  
+    cap = cv2.VideoCapture(0)  
+
     facial_recognition_thread = threading.Thread(target=facial_recognition, args=(cap, frame_holder), daemon=True)
     facial_recognition_thread.start()
+
+    global_vars.win = False
 
 
 def show_start_screen():
     start_screen = True
     font = pygame.font.Font(vcrmono, 48)
-    text = font.render("Press any button to begin", True, (255, 255, 255))
+    text = font.render("Press any button to begin", True, (87, 118, 178))
     text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
     while start_screen:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 start_screen = False
 
@@ -181,20 +205,11 @@ while run:
         if current_time - global_vars.game_over_time >= 3500:
             reset_game()
             show_start_screen()
-        else:
-            # During the 3.5 seconds delay, update Zimblort falling animation without changing its speed
-            zimblort.update()
-            win.fill((12, 24, 36))
-            offset_x = zimblort.x - SCREEN_WIDTH // 2
-            offset_x = max(0, min(offset_x, ground_tiles[-1].right - SCREEN_WIDTH))
+    
+    if global_vars.win:
+        run = False
 
-            offset_y = zimblort.y - SCREEN_HEIGHT // 2
-            offset_y = max(0, min(offset_y, ground_tiles[0].top - SCREEN_HEIGHT))
 
-            draw_bg(False, offset_x)
-            draw(win, offset_x, offset_y)
-            pygame.display.flip()
-        continue
 
     zimblort.update()
 
@@ -221,5 +236,17 @@ while run:
 
     pygame.display.flip()
     clock.tick(120)
+
+
+if global_vars.win:
+        victory_sfx.play()
+        end_loop = True
+        display_victory_message()
+        while end_loop:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    end_loop = False
 
 pygame.quit()

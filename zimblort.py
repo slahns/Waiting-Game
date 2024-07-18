@@ -14,7 +14,7 @@ class Zimblort:
         self.velY = 0
         self.speed = 0.3
         self.fall_speed = 2
-        self.gravity = 0.05  
+        self.gravity = 0.05
         self.spin_speed = random.uniform(-10, 10)  
         self.angle = 0  
         self.sprite_sheet = sprite_sheet
@@ -46,8 +46,11 @@ class Zimblort:
 
     def check_ground_collision(self):
         for ground_tile in self.ground_tiles:
+
             if self.rect.colliderect(ground_tile):
                 global_vars.on_ground = True
+                if ground_tile == self.ground_tiles[2]:
+                    global_vars.win = True
                 return True
         global_vars.on_ground = False
         return False
