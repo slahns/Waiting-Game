@@ -5,7 +5,7 @@ a = Analysis(
     ['game.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets'), ('C:\\Users\\manyd\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml', 'cv2/data/haarcascades/haarcascade_frontalface_default.xml'), ('C:\\Users\\manyd\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\cv2\\data\\haarcascade_eye.xml', 'cv2/data/haarcascades/haarcascade_eye.xml')],
+    datas=[('assets', 'assets'), ('C:\\Users\\manyd\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml', 'cv2/data/haarcascades')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

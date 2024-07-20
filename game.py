@@ -61,7 +61,7 @@ ground_rect_2.bottomright = (800, 600)
 
 ground_tile_3 = pygame.image.load(os.path.join(base_path, 'assets', 'ground_tile.png'))
 ground_rect_3 = ground_tile_2.get_rect()
-ground_rect_3.bottomright = (1200, 600)
+ground_rect_3.bottomright = (48000, 600)
 
 ground_tiles = [ground_rect_1, ground_rect_2, ground_rect_3]
 
@@ -245,6 +245,7 @@ if global_vars.win:
         while end_loop:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    pygame.display.quit()
                     pygame.quit()
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                     end_loop = False
