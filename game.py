@@ -16,7 +16,6 @@ SCREEN_HEIGHT = 600
 BLACK = (0, 0, 0)
 ROPE_COLOR = (231, 162, 124) 
 
-
 pygame.init()
 pygame.display.set_caption(TITLE)
 pygame.mouse.set_visible(False)
@@ -78,12 +77,10 @@ def draw_bg(is_moving, offset_x):
         win.blit(bg_image, (x_position, 0))
         win.blit(bg_image, (x_position + SCREEN_WIDTH, 0))
 
-
 def display_victory_message():
     win.fill(BLACK)
     win.blit(victory_img, (0, 0))
     pygame.display.flip()
-
 
 cap = cv2.VideoCapture(0)
 frame_holder = {"frame": None, "lock": threading.Lock()}
@@ -137,7 +134,6 @@ def reset_game():
     facial_recognition_thread.start()
 
     global_vars.win = False
-
 
 def show_start_screen():
     start_screen = True
