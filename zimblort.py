@@ -36,17 +36,14 @@ class Zimblort:
 
         image = self.animation_list[self.action][self.frame]
 
-        if self.action == 3: 
+        if self.action == 3: # rotation when falling
             rotated_image = pygame.transform.rotate(image, self.angle).convert_alpha()
             win.blit(rotated_image, (self.x - offset[0], self.y - offset[1]))
         else:
             win.blit(image, (self.x - offset[0], self.y - offset[1]))
 
-        #pygame.draw.rect(win, (255, 0, 0), self.rect, 2)
-
     def check_ground_collision(self):
         for ground_tile in self.ground_tiles:
-
             if self.rect.colliderect(ground_tile):
                 global_vars.on_ground = True
                 if ground_tile == self.ground_tiles[2]:
@@ -55,13 +52,8 @@ class Zimblort:
         global_vars.on_ground = False
         return False
 
-
     def update(self):
         self.velX = 0
-
-        if self.check_ground_collision():
-            print("on ground")
-
         if facial_recognition.watching_event.is_set():
             new_action = 1  # moving
         elif global_vars.fell:
@@ -91,7 +83,6 @@ class Zimblort:
         self.x += self.velX
         self.y += self.velY
         self.rect = pygame.Rect(int(self.x), int(self.y), 64, 65)
-
 
     def load_images(self, sprite_sheet, animation_steps):
         animation_list = []

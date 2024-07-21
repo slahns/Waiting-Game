@@ -1,3 +1,4 @@
+# facial recognition code derived from Tech with Tim's video "OpenCV Python Tutorial #8 - Face and Eye Detection" https://www.youtube.com/watch?v=mPCZLOVTEc4
 import sys
 import os
 import numpy as np
@@ -18,14 +19,11 @@ def check_webcam():
     return True
 
 def get_cascade_path(filename):
-    if getattr(sys, 'frozen', False):
-        # Running in a bundle
-        path = os.path.join(sys._MEIPASS, filename)
+    if getattr(sys, 'frozen', False): # if script is being packaged by PyInstaller
+        path = os.path.join(sys._MEIPASS, filename)  # sys._MEIPASS attribute is set to the path of this temporary folder
     else:
-        # Running in a normal Python environment
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename) # if script is not being packaged, files are expected to be in the same directory as the script
     
-    print(f"Using cascade file path: {path}")
     return path
 
 def facial_recognition(cap, frame_holder):
@@ -37,11 +35,9 @@ def facial_recognition(cap, frame_holder):
         print("Error loading face cascade")
 
     face_detected = False
-
-    elapsed_time_face = 0.0
-
-    face_not_detected_start_time = None
-    face_not_detected_duration = 2
+    elapsed_time_face = 0.0 # how long the player's face has not been visible
+    face_not_detected_start_time = None # state of player's face being visible or not
+    face_not_detected_duration = 2 # how long the player can look away before Zimblort falls
 
     while not stop_event.is_set():
         ret, frame = cap.read()
@@ -60,23 +56,19 @@ def facial_recognition(cap, frame_holder):
             cv2.rectangle(frame, (x, y), (x + w, y + h), (225, 0, 0), 5)
 
         if face_detected and not global_vars.game_over:
-            print("Face detected")
             global_vars.falling = False
-            watching_event.set()
+            watching_event.set() # player is watching and face is visible
         else:
-            print("Face not detected")
-            if face_not_detected_start_time:
+            if face_not_detected_start_time: # player's face has begun to not be visible
                 if not global_vars.on_ground:
                     elapsed_time_face = time.time() - face_not_detected_start_time
                 if elapsed_time_face >= face_not_detected_duration:
-                    print(f"Face has not been detected for {elapsed_time_face} seconds")
                     watching_event.clear()
                     global_vars.falling = True
                     if elapsed_time_face >= 5:
-                        print(f"Zimblort fell: Face has not been detected for {elapsed_time_face} seconds")
                         watching_event.clear()
                         global_vars.fell = True
-                        global_vars.game_over_time = pygame.time.get_ticks()  # Record the time when game over occurs
+                        global_vars.game_over_time = pygame.time.get_ticks()  
                         global_vars.game_over = True
                         break
             else:
@@ -89,4 +81,3 @@ def facial_recognition(cap, frame_holder):
             break
 
     cap.release()
-    print("Facial recognition stopped.")
